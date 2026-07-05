@@ -1,5 +1,3 @@
-version: '3'
-
 services:
   zookeeper:
       image: confluentinc/cp-zookeeper:7.4.0
@@ -105,7 +103,7 @@ services:
       retries: 5
 
   webserver:
-    image: apache/airflow:2.6.0-python3.9
+    image: apache/airflow:2.7.0-python3.9
     command: webserver
     entrypoint: ['/opt/airflow/script/entrypoint.sh']
     depends_on:
@@ -134,7 +132,7 @@ services:
       - confluent
 
   scheduler:
-    image: apache/airflow:2.6.0-python3.9
+    image: apache/airflow:2.7.0-python3.9
     depends_on:
       webserver:
         condition: service_healthy
@@ -147,7 +145,7 @@ services:
       - EXECUTOR=Sequential
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
       - AIRFLOW_WEBSERVER_SECRET_KEY=this_is_a_very_secured_key
-    command: bash -c "pip install -r ./requirements.txt && airflow db upgrade && airflow scheduler"
+    command: bash -c "python -m pip install --user -r /opt/airflow/requirements.txt && airflow db upgrade && airflow scheduler"
     networks:
       - confluent
 
@@ -165,7 +163,7 @@ services:
       - confluent
 
   spark-master:
-    image: bitnami/spark:latest
+    image: bitnami/spark:3.4.1
     command: bin/spark-class org.apache.spark.deploy.master.Master
     ports:
       - "9090:8080"
@@ -173,7 +171,7 @@ services:
     networks:
       - confluent
   spark-worker:
-    image: bitnami/spark:latest
+    image: bitnami/spark:3.4.1
     command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
     depends_on:
       - spark-master
